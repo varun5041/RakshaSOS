@@ -3,14 +3,19 @@ package com.example.myapplication;
 import android.Manifest;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.hardware.camera2.CameraManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
 import android.telephony.SmsManager;
 import android.widget.Button;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
@@ -26,14 +31,24 @@ public class MainActivity2 extends AppCompatActivity {
 
     FusedLocationProviderClient fusedLocationClient;
 
-    Button sosBtn, policeBtn, hospitalBtn;
-
-    String phone1, phone2, phone3;
+    Button sosBtn, policeBtn, hospitalBtn, flashBtn;
 
     double latitude;
     double longitude;
 
     String userPincode;
+
+    SQLiteDatabase db;
+
+    String fam1, fam2, fam3;
+
+    CameraManager cameraManager;
+    String cameraId;
+
+    boolean isFlashing = false;
+    boolean flashState = false;
+
+    Handler flashHandler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,24 +58,57 @@ public class MainActivity2 extends AppCompatActivity {
         sosBtn = findViewById(R.id.sosBtn);
         policeBtn = findViewById(R.id.policeBtn);
         hospitalBtn = findViewById(R.id.hospitalBtn);
-
-        SharedPreferences prefs = getSharedPreferences("UserData", MODE_PRIVATE);
-
-        phone1 = prefs.getString("phone1", "");
-        phone2 = prefs.getString("phone2", "");
-        phone3 = prefs.getString("phone3", "");
+        flashBtn = findViewById(R.id.flashBtn);
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
+        db = openOrCreateDatabase("UserStore.db", MODE_PRIVATE, null);
+
+        SharedPreferences prefs = getSharedPreferences("UserData", MODE_PRIVATE);
+
+        fam1 = prefs.getString("phone1","");
+        fam2 = prefs.getString("phone2","");
+        fam3 = prefs.getString("phone3","");
+
+        cameraManager = (CameraManager) getSystemService(CAMERA_SERVICE);
+
+        try {
+            cameraId = cameraManager.getCameraIdList()[0];
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         getUserLocation();
 
-        sosBtn.setOnClickListener(v -> sendEmergencySMS("SOS EMERGENCY"));
+        sosBtn.setOnClickListener(v -> showConfirmation("SOS EMERGENCY"));
 
-        policeBtn.setOnClickListener(v -> sendEmergencySMS("POLICE HELP NEEDED"));
+        policeBtn.setOnClickListener(v -> showConfirmation("POLICE HELP NEEDED"));
 
-        hospitalBtn.setOnClickListener(v -> sendEmergencySMS("MEDICAL EMERGENCY"));
+        hospitalBtn.setOnClickListener(v -> showConfirmation("MEDICAL EMERGENCY"));
+
+        flashBtn.setOnClickListener(v -> toggleFlashSOS());
     }
 
+    // Confirmation popup
+    private void showConfirmation(String type){
+
+        new AlertDialog.Builder(this)
+                .setTitle("Emergency Alert")
+                .setMessage("Are you sure you want to send an emergency alert?")
+                .setPositiveButton("YES",(dialog,which)->{
+
+                    sendEmergencySMS(type);
+
+                })
+                .setNegativeButton("NO",(dialog,which)->{
+
+                    dialog.dismiss();
+
+                })
+                .show();
+    }
+
+    // Get GPS location
     private void getUserLocation() {
 
         if (ActivityCompat.checkSelfPermission(this,
@@ -90,6 +138,7 @@ public class MainActivity2 extends AppCompatActivity {
         });
     }
 
+    // Convert location to pincode
     private void convertLocationToAddress(Location location) {
 
         Geocoder geocoder = new Geocoder(this, Locale.getDefault());
@@ -108,16 +157,7 @@ public class MainActivity2 extends AppCompatActivity {
 
                 userPincode = address.getPostalCode();
 
-                SharedPreferences prefs = getSharedPreferences("UserData", MODE_PRIVATE);
-                SharedPreferences.Editor editor = prefs.edit();
-
-                editor.putString("pincode", userPincode);
-                editor.putString("latitude", String.valueOf(latitude));
-                editor.putString("longitude", String.valueOf(longitude));
-
-                editor.apply();
-
-                Toast.makeText(this,"Pincode: " + userPincode,Toast.LENGTH_SHORT).show();
+                Toast.makeText(this,"Detected Pincode: "+userPincode,Toast.LENGTH_SHORT).show();
             }
 
         } catch (IOException e) {
@@ -126,24 +166,100 @@ public class MainActivity2 extends AppCompatActivity {
         }
     }
 
+    // Send emergency SMS
     private void sendEmergencySMS(String type) {
-
-        String message = type + "\n\nI need help.\n\nMy location:\n"
-                + "https://maps.google.com/?q=" + latitude + "," + longitude;
 
         try {
 
+            String message = type + "\n\nI need help.\n\nMy location:\n"
+                    + "https://maps.google.com/?q=" + latitude + "," + longitude;
+
             SmsManager smsManager = SmsManager.getDefault();
 
-            smsManager.sendTextMessage(phone1, null, message, null, null);
-            smsManager.sendTextMessage(phone2, null, message, null, null);
-            smsManager.sendTextMessage(phone3, null, message, null, null);
+            // Send to family
+            String[] familyNumbers = {fam1, fam2, fam3};
 
-            Toast.makeText(this,"Alert Sent Successfully",Toast.LENGTH_LONG).show();
+            for(String number : familyNumbers){
+
+                if(number != null && !number.isEmpty()){
+
+                    smsManager.sendTextMessage(number,null,message,null,null);
+                }
+            }
+
+            // Get numbers from database
+            Cursor cursor = db.rawQuery(
+                    "SELECT phone1, phone2, phone3 FROM contacts WHERE pincode=?",
+                    new String[]{userPincode}
+            );
+
+            if(cursor.moveToFirst()){
+
+                for(int i=0;i<3;i++){
+
+                    String number = cursor.getString(i);
+
+                    if(number != null && !number.isEmpty()){
+
+                        smsManager.sendTextMessage(number,null,message,null,null);
+                    }
+                }
+            }
+
+            cursor.close();
+
+            Toast.makeText(this,"Emergency Alert Sent",Toast.LENGTH_LONG).show();
 
         } catch (Exception e) {
 
             Toast.makeText(this,"SMS Failed: "+e.getMessage(),Toast.LENGTH_LONG).show();
         }
     }
+
+    // Flash toggle
+    private void toggleFlashSOS() {
+
+        if (!isFlashing) {
+
+            isFlashing = true;
+            flashBtn.setText("STOP FLASH");
+
+            flashHandler.post(flashRunnable);
+
+        } else {
+
+            isFlashing = false;
+
+            flashHandler.removeCallbacks(flashRunnable);
+
+            try {
+                cameraManager.setTorchMode(cameraId, false);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            flashBtn.setText("FLASH SOS");
+        }
+    }
+
+    // Flash blinking loop
+    Runnable flashRunnable = new Runnable() {
+        @Override
+        public void run() {
+
+            if (!isFlashing) return;
+
+            try {
+
+                flashState = !flashState;
+
+                cameraManager.setTorchMode(cameraId, flashState);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            flashHandler.postDelayed(this, 400);
+        }
+    };
 }

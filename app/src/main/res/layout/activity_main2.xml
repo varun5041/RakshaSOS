@@ -39,5 +39,15 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
+    <Button
+        android:id="@+id/flashBtn"
+        android:layout_width="200dp"
+        android:layout_height="60dp"
+        android:text="FLASH"
+        android:textSize="18sp"
+
+        app:layout_constraintTop_toBottomOf="@id/hospitalBtn"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
