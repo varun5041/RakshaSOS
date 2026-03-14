@@ -98,8 +98,13 @@ git clone https://github.com/yourusername/RakshaSOS.git
 (Add screenshots here)
 
 ```
-![Home Screen](images/home.png)
-![SOS Screen](images/sos.png)
+## 📱 App Screenshots
+
+<p align="center">
+<img src="https://github.com/varun5041/RakshaSOS/blob/3b40914f9de604383dbafc6ae3b73338a908f52b/Screenshots/login.png?raw=true" width="250">
+<img src="https://github.com/varun5041/RakshaSOS/blob/3b40914f9de604383dbafc6ae3b73338a908f52b/Screenshots/Interface.png?raw=true" width="250">
+<img src="https://github.com/varun5041/RakshaSOS/blob/3b40914f9de604383dbafc6ae3b73338a908f52b/Screenshots/login.png?raw=true" width="250">
+</p>
 ```
 
 ---
