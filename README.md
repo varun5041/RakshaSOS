@@ -101,13 +101,14 @@ git clone https://github.com/varun5041/RakshaSOS.git
 ## 📱 App Screenshots
 
 ### Login Screen
-![Login Screen](https://github.com/varun5041/RakshaSOS/blob/3b40914f9de604383dbafc6ae3b73338a908f52b/Screenshots/login.png?raw=true)
+![Login Screen](Screenshots/login.png)
 
 ### Interface
-![Interface](https://github.com/varun5041/RakshaSOS/blob/3b40914f9de604383dbafc6ae3b73338a908f52b/Screenshots/Interface.png?raw=true)
+![Interface](Screenshots/Interface.png)
 
 ### Emergency Contacts
-![Contacts](https://github.com/varun5041/RakshaSOS/blob/3b40914f9de604383dbafc6ae3b73338a908f52b/Screenshots/login.png?raw=true)
+![Contacts](Screenshots/login.png)
+
 ```
 
 ---
