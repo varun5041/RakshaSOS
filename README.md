@@ -95,15 +95,16 @@ git clone https://github.com/varun5041/RakshaSOS.git
 
 # 📸 Screenshots
 
-```
-## 📱 App Screenshots
+---
 
-<p align="center">
-  <img src="Screenshots/login.png" width="250"/>
-  <img src="Screenshots/Interface.png" width="250"/>
-</p>
+### Login Screen
+![Login Screen](Screenshots/login.png)
 
-```
+### Interface
+![Interface](Screenshots/Interface.png)
+
+### Emergency Contacts
+![Contacts](Screenshots/login.png)
 
 ---
 
