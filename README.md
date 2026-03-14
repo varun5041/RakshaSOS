@@ -73,7 +73,7 @@ SMS Manager API
 1 Clone the repository
 
 ```
-git clone https://github.com/yourusername/RakshaSOS.git
+git clone https://github.com/varun5041/RakshaSOS.git
 ```
 
 2 Open in Android Studio
